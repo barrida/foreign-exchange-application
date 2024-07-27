@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: exchange
+
+currencyapi:
+  api:
+    key: "cur_live_9mLxgPfNrgZYHTvQgX5B0KdvLaILrFH3y4sEVvhk"
