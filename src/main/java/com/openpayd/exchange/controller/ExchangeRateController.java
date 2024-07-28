@@ -15,7 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExchangeRateController {
 
     @Autowired
-    private ExchangeRateService exchangeRateService;
+    private final ExchangeRateService exchangeRateService;
+
+    public ExchangeRateController(ExchangeRateService exchangeRateService) {
+        this.exchangeRateService = exchangeRateService;
+    }
 
     @GetMapping("/exchange-rate")
     public double getExchangeRate(@RequestParam String sourceCurrency, @RequestParam String targetCurrency) throws Exception {
