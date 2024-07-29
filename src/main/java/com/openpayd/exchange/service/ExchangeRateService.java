@@ -51,7 +51,7 @@ public class ExchangeRateService {
             throw e;
         } catch (Exception e) {
             // Handle other exceptions from InputStreamReader and JsonParser
-            throw new CurrencyNotFoundException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
         }
     }
 
