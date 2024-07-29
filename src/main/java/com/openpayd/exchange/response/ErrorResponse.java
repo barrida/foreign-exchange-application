@@ -1,4 +1,4 @@
-package com.openpayd.exchange.exception;
+package com.openpayd.exchange.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

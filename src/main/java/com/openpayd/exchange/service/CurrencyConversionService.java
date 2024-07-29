@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 /**
  * @author suleyman.yildirim
  */
@@ -35,6 +37,7 @@ public class CurrencyConversionService {
         double rate = exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);
         CurrencyConversion conversion = CurrencyConversion.builder()
                 .convertedAmount(amount * rate)
+                .createdAt(LocalDate.now())
                 .build();
         return repository.save(conversion);
     }
