@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.openpayd'
-version = '0.0.1-SNAPSHOT'
+version = 'v1'
 
 java {
 	toolchain {
@@ -39,4 +39,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+jar {
+	archiveBaseName.set('foreign-exchange-application') // Set this to your desired JAR name
+	archiveVersion.set('v1')
 }
