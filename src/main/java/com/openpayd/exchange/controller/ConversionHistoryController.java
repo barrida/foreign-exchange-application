@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.constraints.PastOrPresent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,8 @@ import java.util.UUID;
 @RequestMapping("/v1")
 @Validated
 public class ConversionHistoryController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConversionHistoryController.class);
 
     private final ConversionHistoryService historyService;
 
@@ -58,15 +62,26 @@ public class ConversionHistoryController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transactionDate,
             Pageable pageable) {
 
+        logger.info("Received request to retrieve conversion history with transactionId: {} and transactionDate: {}", transactionId, transactionDate);
+
         if (transactionId != null && transactionDate != null) {
-            return ResponseEntity.ok(historyService.getConversionHistoryByIdAndCreatedAt(transactionId, transactionDate, pageable));
+            Page<CurrencyConversion> history = historyService.getConversionHistoryByIdAndCreatedAt(transactionId, transactionDate, pageable);
+            logger.info("Successfully retrieved conversion history by ID and date for transactionId: {} and transactionDate: {}", transactionId, transactionDate);
+            return ResponseEntity.ok(history);
         }
-        if (transactionId != null)
-            return ResponseEntity.ok(historyService.getConversionHistoryByTransactionId(transactionId, pageable));
 
-        if (transactionDate != null)
-            return ResponseEntity.ok(historyService.getConversionHistoryByDate(transactionDate, pageable));
+        if (transactionId != null) {
+            Page<CurrencyConversion> history = historyService.getConversionHistoryByTransactionId(transactionId, pageable);
+            logger.info("Successfully retrieved conversion history by ID for transactionId: {}", transactionId);
+            return ResponseEntity.ok(history);
+        }
 
+        if (transactionDate != null){
+            Page<CurrencyConversion> history = historyService.getConversionHistoryByDate(transactionDate, pageable);
+            logger.info("Successfully retrieved conversion history by date for transactionDate: {}", transactionDate);
+            return ResponseEntity.ok(history);
+        }
+        logger.error("Invalid input exception occurred");
         throw new InvalidInputException(ErrorCode.INVALID_INPUT);
     }
 

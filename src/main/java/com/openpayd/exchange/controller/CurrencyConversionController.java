@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1")
 public class CurrencyConversionController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CurrencyConversionController.class);
 
     @Autowired
     private final CurrencyConversionService conversionService;
@@ -48,7 +52,10 @@ public class CurrencyConversionController {
             @RequestParam String targetCurrency,
             @Parameter(description = "Amount to convert", required = true,  example = "15.5")
             @RequestParam double amount) throws Exception {
-        CurrencyConversion conversion = conversionService.convertCurrency(sourceCurrency, targetCurrency, amount);
+
+        logger.info("Received request to convert {} {} to {}", amount, sourceCurrency, targetCurrency);
+        var conversion = conversionService.convertCurrency(sourceCurrency, targetCurrency, amount);
+        logger.info("Successfully converted {} {} to {} {}", amount, sourceCurrency, conversion.getConvertedAmount(), targetCurrency);
         return ResponseEntity.ok(conversion);
     }
 }
