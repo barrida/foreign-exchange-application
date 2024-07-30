@@ -55,8 +55,6 @@ public class ExchangeRateService {
             return rate;
 
         }  catch (CurrencyNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
             logger.error("Error occurred while fetching exchange rate from {} to {}", sourceCurrency, targetCurrency, e);
             throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
         }
