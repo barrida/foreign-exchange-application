@@ -1,7 +1,14 @@
 package com.openpayd.exchange.controller;
 
 import com.openpayd.exchange.model.CurrencyConversion;
+import com.openpayd.exchange.response.ErrorResponse;
 import com.openpayd.exchange.service.CurrencyConversionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,10 +30,23 @@ public class CurrencyConversionController {
         this.conversionService = conversionService;
     }
 
+    @Operation(summary = "Convert currency", description = "Convert a specific amount from one currency to another.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful currency conversion",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CurrencyConversion.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Currency not found", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping("/convert-currency")
     public ResponseEntity<CurrencyConversion> convertCurrency(
+            @Parameter(description = "Source currency code", required = true, example = "EUR")
             @RequestParam String sourceCurrency,
+            @Parameter(description = "Target currency code", required = true, example = "TRY")
             @RequestParam String targetCurrency,
+            @Parameter(description = "Amount to convert", required = true,  example = "15.5")
             @RequestParam double amount) throws Exception {
         CurrencyConversion conversion = conversionService.convertCurrency(sourceCurrency, targetCurrency, amount);
         return ResponseEntity.ok(conversion);

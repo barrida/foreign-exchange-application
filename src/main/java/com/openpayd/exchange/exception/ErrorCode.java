@@ -4,7 +4,7 @@ package com.openpayd.exchange.exception;
  * @author suleyman.yildirim
  */
 public enum ErrorCode {
-    CURRENCY_NOT_FOUND("CURRENCY_NOT_FOUND", "Invalid currency code or response from API"),
+    CURRENCY_NOT_FOUND("CURRENCY_NOT_FOUND", "Currency code invalid or not supported by the service provider"),
     INVALID_INPUT("INVALID_INPUT", "Provide a valid transaction identifier or transaction date");
 
     private final String code;
