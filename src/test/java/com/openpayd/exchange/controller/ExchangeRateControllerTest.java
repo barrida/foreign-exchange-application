@@ -53,8 +53,8 @@ class ExchangeRateControllerTest {
                         .param("targetCurrency", "INVALID"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("Invalid currency code or response from API"))
-                .andExpect(jsonPath("$.errorCode").value("CURRENCY_NOT_FOUND"));
+                .andExpect(jsonPath("$.message").value(ErrorCode.CURRENCY_NOT_FOUND.getMessage()))
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.CURRENCY_NOT_FOUND.getCode()));
     }
 
 }

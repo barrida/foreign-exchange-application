@@ -57,6 +57,5 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(errorMessage, ErrorCode.INVALID_INPUT.getCode());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
-
 }
 

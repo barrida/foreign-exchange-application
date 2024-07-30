@@ -3,8 +3,14 @@ package com.openpayd.exchange.controller;
 import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.exception.InvalidInputException;
 import com.openpayd.exchange.model.CurrencyConversion;
+import com.openpayd.exchange.response.ErrorResponse;
 import com.openpayd.exchange.service.ConversionHistoryService;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.constraints.PastOrPresent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -36,11 +42,19 @@ public class ConversionHistoryController {
         this.historyService = historyService;
     }
 
+    @Operation(summary = "Retrieve conversion history by transaction ID and/or date", description = "Provide a transaction ID or date to retrieve the conversion history.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of conversion history", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Currency not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/conversion-history")
     public ResponseEntity<Page<CurrencyConversion>> getConversionHistory(
-            @RequestParam(required = false) @Valid UUID transactionId,
-            @RequestParam(required = false)
-            @PastOrPresent(message = "Transaction date must be in the past or present")
+            @Parameter(description = "Transaction ID to filter history", example = "71ce75c1-869f-483d-844b-4ab5a3b07eb1")
+            @RequestParam(required = false) UUID transactionId,
+            @Parameter(description = "Transaction date (YYYY-MM-DD) to filter history", example = "2024-07-30")
+            @RequestParam(required = false) @PastOrPresent(message = "Transaction date must be in the past or present")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transactionDate,
             Pageable pageable) {
 
