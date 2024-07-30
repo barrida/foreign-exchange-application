@@ -44,7 +44,7 @@ class ExchangeRateControllerTest {
     }
 
     @Test
-    public void testGetExchangeRateInvalidCurrency() throws Exception {
+    void testGetExchangeRateInvalidCurrency() throws Exception {
         Mockito.when(exchangeRateService.getExchangeRate(anyString(), anyString()))
                 .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
 
