@@ -39,7 +39,7 @@ public class CurrencyConversionService {
     }
 
     @Transactional
-    public CurrencyConversion convertCurrency(String sourceCurrency, String targetCurrency, double amount) throws Exception {
+    public CurrencyConversion convertCurrency(String sourceCurrency, String targetCurrency, double amount) {
         logger.info("Converting currency from {} to {} for amount {}", sourceCurrency, targetCurrency, amount);
         try {
             double rate = exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);

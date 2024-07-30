@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 
@@ -32,7 +33,7 @@ public class ExchangeRateService {
     private String apiKey;
 
     @Cacheable("exchangeRates")
-    public double getExchangeRate(String sourceCurrency, String targetCurrency) throws CurrencyNotFoundException, IOException {
+    public double getExchangeRate(String sourceCurrency, String targetCurrency) throws Exception {
 
         logger.debug("Fetching exchange rate from {} to {}", sourceCurrency, targetCurrency);
         String route = String.format("https://api.currencyapi.com/v3/latest?apikey=%s&base_currency=%s&currencies=%s", apiKey, sourceCurrency, targetCurrency);
@@ -54,14 +55,23 @@ public class ExchangeRateService {
             logger.debug("Fetched exchange rate from {} to {}: {}", sourceCurrency, targetCurrency, rate);
             return rate;
 
-        }  catch (CurrencyNotFoundException e) {
+        } catch (CurrencyNotFoundException e) {
             logger.error("Error occurred while fetching exchange rate from {} to {}", sourceCurrency, targetCurrency, e);
             throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
         }
     }
 
     protected HttpURLConnection createConnection(String route) throws IOException {
-        URL url = new URL(route);
-        return (HttpURLConnection) url.openConnection();
+        URL url;
+        try {
+            url = new URL(route);
+        } catch (MalformedURLException e) {
+            throw new MalformedURLException(e.getMessage());
+        }
+        try {
+            return (HttpURLConnection) url.openConnection();
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 }

@@ -8,10 +8,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/v1")
+@Validated
 public class ExchangeRateController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExchangeRateController.class);
@@ -45,13 +48,13 @@ public class ExchangeRateController {
     })
     @GetMapping("/exchange-rate")
     public ResponseEntity<Double> getExchangeRate(
-            @Parameter(description = "Source currency code", required = true, example = "EUR")
-            @RequestParam String sourceCurrency,
+            @Parameter(description = "Source currency code. USD is set as a default base currency", required = true, example = "EUR")
+            @RequestParam (defaultValue = "USD") String sourceCurrency,
             @Parameter(description = "Target currency code", required = true, example = "GBP")
-            @RequestParam String targetCurrency) throws Exception {
+            @RequestParam @NotEmpty String targetCurrency) throws Exception {
 
         logger.info("Received request to get exchange rate from {} to {}", sourceCurrency, targetCurrency);
-        var rate = exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);
+        var rate= exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);
         logger.info("Exchange rate from {} to {} is {}", sourceCurrency, targetCurrency, rate);
         return ResponseEntity.ok(rate);
     }
