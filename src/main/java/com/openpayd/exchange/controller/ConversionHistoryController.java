@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.constraints.PastOrPresent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springdoc.core.converters.models.PageableAsQueryParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,13 +56,14 @@ public class ConversionHistoryController {
             @ApiResponse(responseCode = "404", description = "Currency not found", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/conversion-history")
+    @PageableAsQueryParam
     public ResponseEntity<Page<CurrencyConversion>> getConversionHistory(
             @Parameter(description = "Transaction ID to filter history", example = "71ce75c1-869f-483d-844b-4ab5a3b07eb1")
             @RequestParam(required = false) UUID transactionId,
             @Parameter(description = "Transaction date (YYYY-MM-DD) to filter history", example = "2024-07-30")
             @RequestParam(required = false) @PastOrPresent(message = "Transaction date must be in the past or present")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate transactionDate,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
 
         logger.info("Received request to retrieve conversion history with transactionId: {} and transactionDate: {}", transactionId, transactionDate);
 
