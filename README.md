@@ -2,9 +2,9 @@
 This application provides exchange rate information and allows users to retrieve conversion history by transaction ID or date. The application is built using Spring Boot and can be run locally or using Docker.
 
 ## Prerequisites
-Java 17 or higher
-Docker and Docker Compose
-Gradle (if running locally without Docker)
+- Java 17 or higher  
+- Docker and Docker Compose  
+- Gradle (if running locally without Docker)
 
 ## Running the Application
 
