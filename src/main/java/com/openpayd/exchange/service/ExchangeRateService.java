@@ -32,7 +32,7 @@ public class ExchangeRateService {
     @Value("${currencyapi.api.key}")
     private String apiKey;
 
-    @Cacheable("exchangeRates")
+    @Cacheable(value = "exchangeRates", key = "#sourceCurrency + '-' + #targetCurrency", unless="#result == null")
     public double getExchangeRate(String sourceCurrency, String targetCurrency) throws Exception {
 
         logger.debug("Fetching exchange rate from {} to {}", sourceCurrency, targetCurrency);

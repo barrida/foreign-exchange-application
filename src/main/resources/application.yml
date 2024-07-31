@@ -14,6 +14,8 @@ spring:
   h2:
     console:
       enabled: true
+  cache:
+    type: caffeine
 
 logging:
   level:

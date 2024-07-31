@@ -3,6 +3,7 @@ package com.openpayd.exchange.service;
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -76,4 +77,28 @@ class ExchangeRateServiceTest {
         assertEquals(ErrorCode.CURRENCY_NOT_FOUND.getMessage(), exception.getMessage());
         assertEquals(ErrorCode.CURRENCY_NOT_FOUND.getCode(), exception.getErrorCode());
     }
+
+    @Test
+    @Disabled(value = "to be done")
+    void testGetExchangeRate_withCache() throws Exception {
+        String jsonResponse = "{\"data\":{\"EUR\":{\"value\":0.85}}}";
+        InputStream inputStream = new ByteArrayInputStream(jsonResponse.getBytes());
+
+        HttpURLConnection mockConnection = mock(HttpURLConnection.class);
+        when(mockConnection.getInputStream()).thenReturn(inputStream);
+
+        ExchangeRateService exchangeRateServiceSpy = Mockito.spy(exchangeRateService);
+        doReturn(mockConnection).when(exchangeRateServiceSpy).createConnection(anyString());
+
+        double rateValue1 = exchangeRateServiceSpy.getExchangeRate("USD", "EUR");
+        assertEquals(0.85, rateValue1);
+
+        // Call the method again to verify that the cache is used
+        double rateValue2 = exchangeRateServiceSpy.getExchangeRate("USD", "EUR");
+        assertEquals(0.85, rateValue2);
+
+        // Verify that the HTTP connection was only opened once due to caching
+        verify(mockConnection, times(1)).connect();
+    }
+
 }
