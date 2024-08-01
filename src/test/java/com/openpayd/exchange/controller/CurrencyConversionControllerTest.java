@@ -1,17 +1,21 @@
 package com.openpayd.exchange.controller;
 
+import com.openpayd.exchange.exception.CurrencyNotFoundException;
+import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.service.CurrencyConversionService;
+import com.openpayd.exchange.service.ExchangeRateService;
+import constants.TestConstants;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
+import java.math.BigDecimal;
+
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -27,20 +31,38 @@ class CurrencyConversionControllerTest {
     @MockBean
     private CurrencyConversionService conversionService;
 
+    @MockBean
+    private ExchangeRateService exchangeRateService;
+
     @Test
     void testConvertCurrency() throws Exception {
         CurrencyConversion conversion = CurrencyConversion.builder()
-                .convertedAmount(85)
+                .convertedAmount(BigDecimal.valueOf(349.99))
                 .build();
 
-        Mockito.when(conversionService.convertCurrency(anyString(), anyString(), anyDouble())).thenReturn(conversion);
+        when(conversionService.convertCurrency(TestConstants.USD, TestConstants.TRY, BigDecimal.valueOf(10.55))).thenReturn(conversion);
 
         mockMvc.perform(post("/v1/convert-currency")
-                        .param("sourceCurrency", "USD")
-                        .param("targetCurrency", "EUR")
-                        .param("amount", "100"))
+                        .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.TRY)
+                        .param("amount", "10.55"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.convertedAmount").value(85.0));
+                .andExpect(jsonPath("$.convertedAmount").value(conversion.getConvertedAmount()));
+    }
+
+    @Test
+    void testConvertCurrency_Invalid_Input() throws Exception {
+        when(exchangeRateService.getExchangeRate(TestConstants.USD, TestConstants.EMPTY_CURRENCY))
+                .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
+
+        when(conversionService.convertCurrency(TestConstants.USD, TestConstants.EMPTY_CURRENCY, BigDecimal.valueOf(100)))
+                .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
+
+        mockMvc.perform(post("/v1/convert-currency")
+                        .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.EMPTY_CURRENCY)
+                        .param("amount", "100"))
+                .andExpect(status().isNotFound());
     }
 }

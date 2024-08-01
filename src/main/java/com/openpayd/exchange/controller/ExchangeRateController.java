@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 /**
  * @author suleyman.yildirim
  */
@@ -47,7 +49,7 @@ public class ExchangeRateController {
                     schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/exchange-rate")
-    public ResponseEntity<Double> getExchangeRate(
+    public ResponseEntity<BigDecimal> getExchangeRate(
             @Parameter(description = "Source currency code. USD is set as a default base currency", required = true, example = "EUR")
             @RequestParam (defaultValue = "USD") String sourceCurrency,
             @Parameter(description = "Target currency code", required = true, example = "GBP")

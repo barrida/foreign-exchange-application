@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.UUID;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ConversionHistoryController.class)
 class ConversionHistoryControllerTest {
 
-    private static final double CONVERTED_AMOUNT = 85.0;
+    private static final BigDecimal CONVERTED_AMOUNT = BigDecimal.valueOf(85.0);
 
     private static final LocalDate TRANSACTION_DATE = LocalDate.of(2024, 5, 5);
 
