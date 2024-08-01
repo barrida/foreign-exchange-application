@@ -4,6 +4,7 @@ import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.repository.CurrencyConversionRepository;
+import constants.TestConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,21 +54,21 @@ class CurrencyConversionServiceTest {
 
     @Test
     void testConvertCurrency() throws Exception {
-        double rate = 0.85;
-        double amount = 100;
-        double convertedAmount = amount * rate;
+        var rate = BigDecimal.valueOf(33.174);
+        var amount = BigDecimal.valueOf(10.55);
+        var convertedAmount = amount.multiply(rate).setScale(2, RoundingMode.HALF_UP); // 349.9857 to 349.99
 
         CurrencyConversion conversion = CurrencyConversion.builder()
                 .id(UUID.randomUUID())
                 .convertedAmount(convertedAmount)
                 .build();
 
-        when(exchangeRateService.getExchangeRate("USD", "EUR")).thenReturn(rate);
+        when(exchangeRateService.getExchangeRate(TestConstants.USD, TestConstants.EUR)).thenReturn(rate);
         when(repository.save(any(CurrencyConversion.class))).thenReturn(conversion);
 
-        CurrencyConversion result = conversionService.convertCurrency("USD", "EUR", amount);
+        CurrencyConversion result = conversionService.convertCurrency(TestConstants.USD, TestConstants.EUR, amount);
 
-        assertEquals(convertedAmount, result.getConvertedAmount());
+        assertEquals(BigDecimal.valueOf(349.99), result.getConvertedAmount());
     }
 
     @Test
@@ -74,7 +77,7 @@ class CurrencyConversionServiceTest {
                 .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
 
         assertThrows(CurrencyNotFoundException.class, () -> {
-            conversionService.convertCurrency("USD", "INVALID", 100);
+            conversionService.convertCurrency(TestConstants.USD, TestConstants.INVALID, BigDecimal.valueOf(100));
         });
     }
 }

@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
 /**
@@ -39,13 +41,14 @@ public class CurrencyConversionService {
     }
 
     @Transactional
-    public CurrencyConversion convertCurrency(String sourceCurrency, String targetCurrency, double amount) {
+    public CurrencyConversion convertCurrency(String sourceCurrency, String targetCurrency, BigDecimal amount) {
         logger.info("Converting currency from {} to {} for amount {}", sourceCurrency, targetCurrency, amount);
         try {
-            double rate = exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);
+            final var rate = exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);
             logger.debug("Exchange rate from {} to {} is {}", sourceCurrency, targetCurrency, rate);
+            final var convertedAmount = amount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
             CurrencyConversion conversion = CurrencyConversion.builder()
-                    .convertedAmount(amount * rate)
+                    .convertedAmount(convertedAmount)
                     .createdAt(LocalDate.now())
                     .build();
             CurrencyConversion savedConversion = repository.save(conversion);

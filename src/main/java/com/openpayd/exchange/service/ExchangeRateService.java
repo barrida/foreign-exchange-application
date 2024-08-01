@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,7 +35,7 @@ public class ExchangeRateService {
     private String apiKey;
 
     @Cacheable(value = "exchangeRates", key = "#sourceCurrency + '-' + #targetCurrency", unless="#result == null")
-    public double getExchangeRate(String sourceCurrency, String targetCurrency) throws Exception {
+    public BigDecimal getExchangeRate(String sourceCurrency, String targetCurrency) throws Exception {
 
         logger.debug("Fetching exchange rate from {} to {}", sourceCurrency, targetCurrency);
         String route = String.format("https://api.currencyapi.com/v3/latest?apikey=%s&base_currency=%s&currencies=%s", apiKey, sourceCurrency, targetCurrency);
@@ -51,7 +53,7 @@ public class ExchangeRateService {
                 throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
             }
             JsonObject targetData = data.getAsJsonObject(targetCurrency);
-            var rate = targetData.get("value").getAsDouble();
+            var rate = targetData.get("value").getAsBigDecimal().setScale(2, RoundingMode.HALF_UP);
             logger.debug("Fetched exchange rate from {} to {}: {}", sourceCurrency, targetCurrency, rate);
             return rate;
 

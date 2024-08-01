@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 /**
  * @author suleyman.yildirim
  */
@@ -51,7 +53,7 @@ public class CurrencyConversionController {
             @Parameter(description = "Target currency code", required = true, example = "TRY")
             @RequestParam String targetCurrency,
             @Parameter(description = "Amount to convert", required = true,  example = "15.5")
-            @RequestParam double amount) {
+            @RequestParam BigDecimal amount) {
 
         logger.info("Received request to convert {} {} to {}", amount, sourceCurrency, targetCurrency);
         var conversion = conversionService.convertCurrency(sourceCurrency, targetCurrency, amount);

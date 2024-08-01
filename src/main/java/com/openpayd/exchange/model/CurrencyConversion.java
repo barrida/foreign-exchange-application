@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public class CurrencyConversion {
 
     @PositiveOrZero(message = "convertedAmount must be zero or positive")
     @Schema(name = "The converted amount in the target currency", example = "32.394954")
-    private double convertedAmount;
+    private BigDecimal convertedAmount;
 
     @Schema(name = "The transaction date", example = "2024-07-29")
     private LocalDate createdAt;

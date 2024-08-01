@@ -2,6 +2,7 @@ package com.openpayd.exchange.service;
 
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ErrorCode;
+import constants.TestConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -15,12 +16,14 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+
 
 /**
  * @author suleyman.yildirim
@@ -30,6 +33,8 @@ import static org.mockito.Mockito.*;
 @TestPropertySource(locations = "classpath:application.yml")
 @ExtendWith(MockitoExtension.class)
 class ExchangeRateServiceTest {
+
+    public static final BigDecimal EXPECTED_RATE = BigDecimal.valueOf(33.17);
 
     @InjectMocks
     private ExchangeRateService exchangeRateService;
@@ -45,7 +50,7 @@ class ExchangeRateServiceTest {
 
     @Test
     void testGetExchangeRate() throws Exception {
-        String jsonResponse = "{\"data\":{\"EUR\":{\"value\":0.85}}}";
+        String jsonResponse = "{\"data\":{\"EUR\":{\"value\":33.17}}}";
         InputStream inputStream = new ByteArrayInputStream(jsonResponse.getBytes());
 
         HttpURLConnection mockConnection = mock(HttpURLConnection.class);
@@ -54,9 +59,9 @@ class ExchangeRateServiceTest {
         ExchangeRateService exchangeRateServiceSpy = Mockito.spy(exchangeRateService);
         doReturn(mockConnection).when(exchangeRateServiceSpy).createConnection(anyString());
 
-        double rateValue = exchangeRateServiceSpy.getExchangeRate("USD", "EUR");
+        var rateValue = exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.EUR);
 
-        assertEquals(0.85, rateValue);
+        assertEquals(EXPECTED_RATE, rateValue);
     }
 
     @Test
@@ -71,7 +76,7 @@ class ExchangeRateServiceTest {
         doReturn(mockConnection).when(exchangeRateServiceSpy).createConnection(anyString());
 
         CurrencyNotFoundException exception = assertThrows(CurrencyNotFoundException.class, () -> {
-            exchangeRateServiceSpy.getExchangeRate("USD", "INVALID");
+            exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.INVALID);
         });
 
         assertEquals(ErrorCode.CURRENCY_NOT_FOUND.getMessage(), exception.getMessage());
@@ -81,7 +86,7 @@ class ExchangeRateServiceTest {
     @Test
     @Disabled(value = "to be done")
     void testGetExchangeRate_withCache() throws Exception {
-        String jsonResponse = "{\"data\":{\"EUR\":{\"value\":0.85}}}";
+        String jsonResponse = "{\"data\":{\"EUR\":{\"value\":33.17}}}";
         InputStream inputStream = new ByteArrayInputStream(jsonResponse.getBytes());
 
         HttpURLConnection mockConnection = mock(HttpURLConnection.class);
@@ -90,12 +95,12 @@ class ExchangeRateServiceTest {
         ExchangeRateService exchangeRateServiceSpy = Mockito.spy(exchangeRateService);
         doReturn(mockConnection).when(exchangeRateServiceSpy).createConnection(anyString());
 
-        double rateValue1 = exchangeRateServiceSpy.getExchangeRate("USD", "EUR");
-        assertEquals(0.85, rateValue1);
+        var rateValue1 = exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.EUR);
+        assertEquals(EXPECTED_RATE, rateValue1);
 
         // Call the method again to verify that the cache is used
-        double rateValue2 = exchangeRateServiceSpy.getExchangeRate("USD", "EUR");
-        assertEquals(0.85, rateValue2);
+        var rateValue2 = exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.EUR);
+        assertEquals(EXPECTED_RATE, rateValue2);
 
         // Verify that the HTTP connection was only opened once due to caching
         verify(mockConnection, times(1)).connect();
