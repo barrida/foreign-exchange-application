@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 class ConversionHistoryServiceTest {
+
+    private static final BigDecimal CONVERTED_AMOUNT = BigDecimal.valueOf(85.0);
 
     @Mock
     private CurrencyConversionRepository repository;
@@ -43,7 +46,7 @@ class ConversionHistoryServiceTest {
         UUID transactionId = UUID.randomUUID();
         CurrencyConversion conversion = CurrencyConversion.builder()
                 .id(transactionId)
-                .convertedAmount(85)
+                .convertedAmount(CONVERTED_AMOUNT)
                 .createdAt(LocalDate.now())
                 .build();
 
@@ -63,7 +66,7 @@ class ConversionHistoryServiceTest {
         LocalDate transactionDate = LocalDate.now().minusDays(1);
         CurrencyConversion conversion = CurrencyConversion.builder()
                 .id(UUID.randomUUID())
-                .convertedAmount(85)
+                .convertedAmount(CONVERTED_AMOUNT)
                 .createdAt(LocalDate.now())
                 .build();
 
