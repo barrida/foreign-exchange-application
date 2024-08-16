@@ -12,10 +12,12 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class ErrorResponse {
-    @Schema(name = "Error message", example = "Provide a valid transaction identifier or transaction date")
+
+    @Schema(name = "Error code", example = "CURRENCY_NOT_FOUND")
+    private String errorCode;
+
+    @Schema(name = "Error message", example = "Currency code XXX invalid")
     private String message;
 
-    @Schema(name = "Error code", example = "INVALID_INPUT")
-    private String errorCode;
 }
 

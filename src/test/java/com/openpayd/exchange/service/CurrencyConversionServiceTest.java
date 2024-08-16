@@ -1,7 +1,6 @@
 package com.openpayd.exchange.service;
 
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
-import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.repository.CurrencyConversionRepository;
 import constants.TestConstants;
@@ -74,10 +73,10 @@ class CurrencyConversionServiceTest {
     @Test
     void testGetExchangeRateInvalidCurrency() throws Exception {
         when(exchangeRateService.getExchangeRate(anyString(), anyString()))
-                .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
+                .thenThrow(new CurrencyNotFoundException(TestConstants.USD));
 
         assertThrows(CurrencyNotFoundException.class, () -> {
-            conversionService.convertCurrency(TestConstants.USD, TestConstants.INVALID, BigDecimal.valueOf(100));
+            conversionService.convertCurrency(TestConstants.USD, TestConstants.INVALID_CURRENCY, BigDecimal.valueOf(100));
         });
     }
 }
