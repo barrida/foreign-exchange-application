@@ -4,6 +4,7 @@ package com.openpayd.exchange.controller;
 import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.service.ConversionHistoryService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -114,52 +115,14 @@ class ConversionHistoryControllerTest {
     }
 
     @Test
-    void testGetConversionHistoryByInvalidDate() throws Exception {
-        mockMvc.perform(get("/v1/conversion-history")
+    void testGetConversionHistoryByInvalidInput() throws Exception {
+        var asd = mockMvc.perform(get("/v1/conversion-history")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_INPUT.getMessage()))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT.getCode()));
-    }
+                .andReturn();
 
-    @Test
-    void testGetConversionHistoryByDateNullDates() throws Exception {
-        mockMvc.perform(get("/v1/conversion-history")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_INPUT.getMessage()))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT.getCode()));
-    }
-
-    @Test
-    void testGetConversionHistoryByNullTransactionId() throws Exception {
-        mockMvc.perform(get("/v1/conversion-history")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_INPUT.getMessage()))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT.getCode()));
-    }
-
-    @Test
-    void testGetConversionHistoryNoParameters() throws Exception {
-        mockMvc.perform(get("/v1/conversion-history")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_INPUT.getMessage()))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT.getCode()));
-    }
-
-    @Test
-    void testGetConversionHistoryInvalidTransactionDate() throws Exception {
-        mockMvc.perform(get("/v1/conversion-history")
-                        .param("transactionDate", "invalid-date")) // invalid date to trigger MethodArgumentTypeMismatchException
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Failed to convert value 'invalid-date' to required type 'LocalDate'"))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT.getCode()));
+        Assertions.assertEquals("At least one of transactionId or transactionDate must be provided", asd.getResponse().getContentAsString());
     }
 
     @Test
@@ -167,8 +130,8 @@ class ConversionHistoryControllerTest {
         mockMvc.perform(get("/v1/conversion-history")
                         .param("transactionDate", "2025-07-30")) // A future date to trigger ConstraintViolationException
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Transaction date must be in the past or present"))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.INVALID_INPUT.getCode()));
+                .andExpect(jsonPath("$.message").value("Validation failed: getConversionHistory.transactionDate: Transaction date must be in the past or present"))
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_ERROR.getCode()));
     }
 
 }

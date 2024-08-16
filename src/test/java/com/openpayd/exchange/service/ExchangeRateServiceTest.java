@@ -76,11 +76,11 @@ class ExchangeRateServiceTest {
         doReturn(mockConnection).when(exchangeRateServiceSpy).createConnection(anyString());
 
         CurrencyNotFoundException exception = assertThrows(CurrencyNotFoundException.class, () -> {
-            exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.INVALID);
+            exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.INVALID_CURRENCY);
         });
 
-        assertEquals(ErrorCode.CURRENCY_NOT_FOUND.getMessage(), exception.getMessage());
-        assertEquals(ErrorCode.CURRENCY_NOT_FOUND.getCode(), exception.getErrorCode());
+        assertEquals(ErrorCode.CURRENCY_NOT_FOUND.formatMessage(TestConstants.INVALID_CURRENCY), exception.getMessage());
+        assertEquals(ErrorCode.CURRENCY_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test

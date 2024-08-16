@@ -1,7 +1,6 @@
 package com.openpayd.exchange.controller;
 
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
-import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.service.CurrencyConversionService;
 import com.openpayd.exchange.service.ExchangeRateService;
@@ -54,10 +53,10 @@ class CurrencyConversionControllerTest {
     @Test
     void testConvertCurrency_Invalid_Input() throws Exception {
         when(exchangeRateService.getExchangeRate(TestConstants.USD, TestConstants.EMPTY_CURRENCY))
-                .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
+                .thenThrow(new CurrencyNotFoundException(TestConstants.EMPTY_CURRENCY));
 
         when(conversionService.convertCurrency(TestConstants.USD, TestConstants.EMPTY_CURRENCY, BigDecimal.valueOf(100)))
-                .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
+                .thenThrow(new CurrencyNotFoundException(TestConstants.EMPTY_CURRENCY));
 
         mockMvc.perform(post("/v1/convert-currency")
                         .param("sourceCurrency", TestConstants.USD)

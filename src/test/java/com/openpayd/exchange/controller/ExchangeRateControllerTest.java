@@ -2,6 +2,7 @@ package com.openpayd.exchange.controller;
 
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ErrorCode;
+import com.openpayd.exchange.exception.ExternalApiException;
 import com.openpayd.exchange.service.ExchangeRateService;
 import constants.TestConstants;
 import org.junit.jupiter.api.Assertions;
@@ -14,11 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
+import static com.openpayd.exchange.exception.ErrorCode.EXTERNAL_API_ERROR;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -83,15 +85,44 @@ class ExchangeRateControllerTest {
     @Test
     void testGetExchangeRateInvalidCurrency() throws Exception {
         Mockito.when(exchangeRateService.getExchangeRate(anyString(), anyString()))
-                .thenThrow(new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND));
+                .thenThrow(new CurrencyNotFoundException(TestConstants.INVALID_CURRENCY));
 
         mockMvc.perform(get("/v1/exchange-rate")
                         .param("sourceCurrency", TestConstants.USD)
-                        .param("targetCurrency", TestConstants.INVALID))
+                        .param("targetCurrency", TestConstants.INVALID_CURRENCY))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(ErrorCode.CURRENCY_NOT_FOUND.getMessage()))
+                .andExpect(jsonPath("$.message").value(ErrorCode.CURRENCY_NOT_FOUND.formatMessage(TestConstants.INVALID_CURRENCY)))
                 .andExpect(jsonPath("$.errorCode").value(ErrorCode.CURRENCY_NOT_FOUND.getCode()));
     }
 
+
+    @Test
+    void testGetExchangeRateWithIOException() throws Exception {
+
+        when(exchangeRateService.getExchangeRate(anyString(), anyString())).thenThrow(new ExternalApiException("Failed to connect to external API"));
+
+        mockMvc.perform(get("/v1/exchange-rate")
+                        .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.EUR))
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value("There was an issue communicating with the external service. Please try again later."))
+                .andExpect(jsonPath("$.errorCode").value(EXTERNAL_API_ERROR.getCode()));
+    }
+
+    @Test
+    void testGetExchangeRateWithGenericException() throws Exception {
+
+        Throwable e = new IOException("Connection timed out");
+        when(exchangeRateService.getExchangeRate(anyString(), anyString())).thenThrow(new ExternalApiException("Unexpected error occurred while fetching exchange rate", e));
+
+        mockMvc.perform(get("/v1/exchange-rate")
+                        .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.EUR))
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value("There was an issue communicating with the external service. Please try again later."))
+                .andExpect(jsonPath("$.errorCode").value(EXTERNAL_API_ERROR.getCode()));
+    }
 }

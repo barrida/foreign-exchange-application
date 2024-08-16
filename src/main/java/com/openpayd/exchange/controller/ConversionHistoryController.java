@@ -1,7 +1,5 @@
 package com.openpayd.exchange.controller;
 
-import com.openpayd.exchange.exception.ErrorCode;
-import com.openpayd.exchange.exception.InvalidInputException;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.response.ErrorResponse;
 import com.openpayd.exchange.service.ConversionHistoryService;
@@ -57,7 +55,7 @@ public class ConversionHistoryController {
     })
     @GetMapping("/conversion-history")
     @PageableAsQueryParam
-    public ResponseEntity<Page<CurrencyConversion>> getConversionHistory(
+    public ResponseEntity<?> getConversionHistory(
             @Parameter(description = "Transaction ID to filter history", example = "71ce75c1-869f-483d-844b-4ab5a3b07eb1")
             @RequestParam(required = false) UUID transactionId,
             @Parameter(description = "Transaction date (YYYY-MM-DD) to filter history", example = "2024-07-30")
@@ -84,8 +82,9 @@ public class ConversionHistoryController {
             logger.info("Successfully retrieved conversion history by date for transactionDate: {}", transactionDate);
             return ResponseEntity.ok(history);
         }
-        logger.error("Invalid input exception occurred");
-        throw new InvalidInputException(ErrorCode.INVALID_INPUT);
+
+        return ResponseEntity.badRequest().body("At least one of transactionId or transactionDate must be provided");
+
     }
 
 }

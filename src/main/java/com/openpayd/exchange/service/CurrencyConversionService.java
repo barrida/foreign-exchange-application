@@ -2,7 +2,7 @@ package com.openpayd.exchange.service;
 
 
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
-import com.openpayd.exchange.exception.ErrorCode;
+import com.openpayd.exchange.exception.ExternalApiException;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.repository.CurrencyConversionRepository;
 import lombok.Getter;
@@ -54,9 +54,14 @@ public class CurrencyConversionService {
             CurrencyConversion savedConversion = repository.save(conversion);
             logger.info("Saved currency conversion: {}", savedConversion);
             return savedConversion;
+        } catch (CurrencyNotFoundException e) {
+            // Add context to the exception and rethrow without logging here
+            throw new CurrencyNotFoundException(String.format("Currency not found during conversion: sourceCurrency %s - targetCurrency%s", sourceCurrency, targetCurrency));
+        } catch (ExternalApiException e) {
+            // Add context to the exception and rethrow without logging here
+            throw new ExternalApiException(String.format("Error occurred during currency conversion from %s to %s: %s", sourceCurrency, targetCurrency, e.getMessage()), e);
         } catch (Exception e) {
-            logger.error("Error occurred during currency conversion from {} to {}", sourceCurrency, targetCurrency, e);
-            throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
+            throw new ExternalApiException(String.format("An unexpected error occurred during currency conversion from %s to %s", sourceCurrency, targetCurrency), e);
         }
     }
 }

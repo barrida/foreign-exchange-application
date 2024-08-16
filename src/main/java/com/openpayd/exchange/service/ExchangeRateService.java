@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.openpayd.exchange.exception.CurrencyNotFoundException;
-import com.openpayd.exchange.exception.ErrorCode;
+import com.openpayd.exchange.exception.ExternalApiException;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,45 +35,48 @@ public class ExchangeRateService {
     private String apiKey;
 
     @Cacheable(value = "exchangeRates", key = "#sourceCurrency + '-' + #targetCurrency", unless="#result == null")
-    public BigDecimal getExchangeRate(String sourceCurrency, String targetCurrency) throws Exception {
+    public BigDecimal getExchangeRate(String sourceCurrency, String targetCurrency) {
 
         logger.debug("Fetching exchange rate from {} to {}", sourceCurrency, targetCurrency);
         String route = String.format("https://api.currencyapi.com/v3/latest?apikey=%s&base_currency=%s&currencies=%s", apiKey, sourceCurrency, targetCurrency);
-        HttpURLConnection request = createConnection(route);
 
         try {
-            logger.debug("Connecting to URL: {}", route);
+            HttpURLConnection request = createConnection(route);
             request.connect();
             InputStream inputStream = request.getInputStream();
             JsonElement root = JsonParser.parseReader(new InputStreamReader(inputStream));
             JsonObject jsonobj = root.getAsJsonObject();
             JsonObject data = jsonobj.getAsJsonObject("data");
+
             if (!data.has(targetCurrency)) {
                 logger.error("Currency not found: {}", targetCurrency);
-                throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
+                throw new CurrencyNotFoundException(targetCurrency);
             }
+
             JsonObject targetData = data.getAsJsonObject(targetCurrency);
-            var rate = targetData.get("value").getAsBigDecimal().setScale(2, RoundingMode.HALF_UP);
+            BigDecimal rate = targetData.get("value").getAsBigDecimal().setScale(2, RoundingMode.HALF_UP);
             logger.debug("Fetched exchange rate from {} to {}: {}", sourceCurrency, targetCurrency, rate);
             return rate;
 
         } catch (CurrencyNotFoundException e) {
-            logger.error("Error occurred while fetching exchange rate from {} to {}", sourceCurrency, targetCurrency, e);
-            throw new CurrencyNotFoundException(ErrorCode.CURRENCY_NOT_FOUND);
+            // No need to re-throw since the exception is specific and already contains relevant information.
+            throw e;
+        } catch (IOException e) {
+            throw new ExternalApiException("Failed to connect to external API", e);
+        } catch (Exception e) {
+            throw new ExternalApiException("Unexpected error occurred while fetching exchange rate", e);
         }
     }
 
-    protected HttpURLConnection createConnection(String route) throws IOException {
-        URL url;
+    public HttpURLConnection createConnection(String route) {
         try {
-            url = new URL(route);
-        } catch (MalformedURLException e) {
-            throw new MalformedURLException(e.getMessage());
-        }
-        try {
+            URL url = new URL(route);
             return (HttpURLConnection) url.openConnection();
+        } catch (MalformedURLException e) {
+            throw new ExternalApiException("Malformed URL: " + route, e);
         } catch (IOException e) {
-            throw new IOException(e.getMessage());
+            throw new ExternalApiException("I/O error while opening connection to URL: " + route, e);
         }
     }
+
 }
