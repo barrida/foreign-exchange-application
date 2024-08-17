@@ -1,6 +1,6 @@
 package com.openpayd.exchange.controller;
 
-import com.openpayd.exchange.exception.CurrencyNotFoundException;
+import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.service.CurrencyConversionService;
 import com.openpayd.exchange.service.ExchangeRateService;
@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,17 +52,53 @@ class CurrencyConversionControllerTest {
     }
 
     @Test
-    void testConvertCurrency_Invalid_Input() throws Exception {
-        when(exchangeRateService.getExchangeRate(TestConstants.USD, TestConstants.EMPTY_CURRENCY))
-                .thenThrow(new CurrencyNotFoundException(TestConstants.EMPTY_CURRENCY));
-
-        when(conversionService.convertCurrency(TestConstants.USD, TestConstants.EMPTY_CURRENCY, BigDecimal.valueOf(100)))
-                .thenThrow(new CurrencyNotFoundException(TestConstants.EMPTY_CURRENCY));
-
+    void testConvertCurrency_Invalid_Amount() throws Exception {
         mockMvc.perform(post("/v1/convert-currency")
                         .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.TRY)
+                        .param("amount", "-10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("Validation failed: convertCurrency.amount: must be greater than 0.0")))
+                .andExpect(jsonPath("$.errorCode").value((ErrorCode.VALIDATION_ERROR.getCode())));
+    }
+
+    @Test
+    void testConvertCurrency_Empty_Amount() throws Exception {
+        mockMvc.perform(post("/v1/convert-currency")
+                        .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.TRY)
+                        .param("amount", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("Validation failed: Required request parameter 'amount' for method parameter type BigDecimal is present but converted to null")))
+                .andExpect(jsonPath("$.errorCode").value((ErrorCode.VALIDATION_ERROR.getCode())));
+    }
+
+    @Test
+    void testConvertCurrency_Invalid_Source_And_Target_Currency_Empty() throws Exception {
+        mockMvc.perform(post("/v1/convert-currency")
+                        .param("sourceCurrency", TestConstants.EMPTY_CURRENCY)
                         .param("targetCurrency", TestConstants.EMPTY_CURRENCY)
                         .param("amount", "100"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("convertCurrency.targetCurrency: must match \"^[A-Z]{3}$\"")))
+                .andExpect(jsonPath("$.message").value(containsString("convertCurrency.targetCurrency: must not be blank")))
+                .andExpect(jsonPath("$.message").value(containsString("convertCurrency.sourceCurrency: must match \"^[A-Z]{3}$\"")))
+                .andExpect(jsonPath("$.message").value(containsString("convertCurrency.sourceCurrency: must not be blank")))
+                .andExpect(jsonPath("$.errorCode").value((ErrorCode.VALIDATION_ERROR.getCode())));
+
     }
+
+
+    @Test
+    void testConvertCurrency_Invalid_Currency_Pattern() throws Exception {
+        mockMvc.perform(post("/v1/convert-currency")
+                        .param("sourceCurrency", TestConstants.USD)
+                        .param("targetCurrency", TestConstants.INVALID_CURRENCY)
+                        .param("amount", "100"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(("Validation failed: convertCurrency.targetCurrency: must match \"^[A-Z]{3}$\"")))
+                .andExpect(jsonPath("$.errorCode").value((ErrorCode.VALIDATION_ERROR.getCode())));
+
+    }
+
 }

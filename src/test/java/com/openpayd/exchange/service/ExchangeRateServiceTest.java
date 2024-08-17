@@ -1,7 +1,7 @@
 package com.openpayd.exchange.service;
 
-import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ErrorCode;
+import com.openpayd.exchange.exception.ExternalApiException;
 import constants.TestConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -75,12 +75,12 @@ class ExchangeRateServiceTest {
         ExchangeRateService exchangeRateServiceSpy = Mockito.spy(exchangeRateService);
         doReturn(mockConnection).when(exchangeRateServiceSpy).createConnection(anyString());
 
-        CurrencyNotFoundException exception = assertThrows(CurrencyNotFoundException.class, () -> {
+        ExternalApiException exception = assertThrows(ExternalApiException.class, () -> {
             exchangeRateServiceSpy.getExchangeRate(TestConstants.USD, TestConstants.INVALID_CURRENCY);
         });
 
-        assertEquals(ErrorCode.CURRENCY_NOT_FOUND.formatMessage(TestConstants.INVALID_CURRENCY), exception.getMessage());
-        assertEquals(ErrorCode.CURRENCY_NOT_FOUND, exception.getErrorCode());
+        assertEquals("An error occurred while communicating with the external service: Unexpected error occurred while fetching exchange rate", exception.getMessage());
+        assertEquals(ErrorCode.EXTERNAL_API_ERROR, exception.getErrorCode());
     }
 
     @Test

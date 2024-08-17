@@ -1,7 +1,6 @@
 package com.openpayd.exchange.service;
 
 
-import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ExternalApiException;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.repository.CurrencyConversionRepository;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -41,7 +41,7 @@ public class CurrencyConversionService {
     }
 
     @Transactional
-    public CurrencyConversion convertCurrency(String sourceCurrency, String targetCurrency, BigDecimal amount) {
+    public CurrencyConversion convertCurrency(String sourceCurrency, String targetCurrency, BigDecimal amount) throws IOException {
         logger.info("Converting currency from {} to {} for amount {}", sourceCurrency, targetCurrency, amount);
         try {
             final var rate = exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);
@@ -54,12 +54,9 @@ public class CurrencyConversionService {
             CurrencyConversion savedConversion = repository.save(conversion);
             logger.info("Saved currency conversion: {}", savedConversion);
             return savedConversion;
-        } catch (CurrencyNotFoundException e) {
+        } catch (IOException e) {
             // Add context to the exception and rethrow without logging here
-            throw new CurrencyNotFoundException(String.format("Currency not found during conversion: sourceCurrency %s - targetCurrency%s", sourceCurrency, targetCurrency));
-        } catch (ExternalApiException e) {
-            // Add context to the exception and rethrow without logging here
-            throw new ExternalApiException(String.format("Error occurred during currency conversion from %s to %s: %s", sourceCurrency, targetCurrency, e.getMessage()), e);
+            throw new ExternalApiException(String.format("Currency conversion error from %s to %s: %s", sourceCurrency, targetCurrency, e.getMessage()), e);
         } catch (Exception e) {
             throw new ExternalApiException(String.format("An unexpected error occurred during currency conversion from %s to %s", sourceCurrency, targetCurrency), e);
         }

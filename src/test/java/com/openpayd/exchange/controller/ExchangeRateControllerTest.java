@@ -1,6 +1,5 @@
 package com.openpayd.exchange.controller;
 
-import com.openpayd.exchange.exception.CurrencyNotFoundException;
 import com.openpayd.exchange.exception.ErrorCode;
 import com.openpayd.exchange.exception.ExternalApiException;
 import com.openpayd.exchange.service.ExchangeRateService;
@@ -84,16 +83,14 @@ class ExchangeRateControllerTest {
 
     @Test
     void testGetExchangeRateInvalidCurrency() throws Exception {
-        Mockito.when(exchangeRateService.getExchangeRate(anyString(), anyString()))
-                .thenThrow(new CurrencyNotFoundException(TestConstants.INVALID_CURRENCY));
 
         mockMvc.perform(get("/v1/exchange-rate")
                         .param("sourceCurrency", TestConstants.USD)
                         .param("targetCurrency", TestConstants.INVALID_CURRENCY))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(ErrorCode.CURRENCY_NOT_FOUND.formatMessage(TestConstants.INVALID_CURRENCY)))
-                .andExpect(jsonPath("$.errorCode").value(ErrorCode.CURRENCY_NOT_FOUND.getCode()));
+                .andExpect(jsonPath("$.message").value("Validation failed: getExchangeRate.targetCurrency: must match \"^[A-Z]{3}$\""))
+                .andExpect(jsonPath("$.errorCode").value(ErrorCode.VALIDATION_ERROR.getCode()));
     }
 
 
@@ -107,7 +104,7 @@ class ExchangeRateControllerTest {
                         .param("targetCurrency", TestConstants.EUR))
                 .andExpect(status().is5xxServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("There was an issue communicating with the external service. Please try again later."))
+                .andExpect(jsonPath("$.message").value("Validation failed: An error occurred while communicating with the external service: Failed to connect to external API"))
                 .andExpect(jsonPath("$.errorCode").value(EXTERNAL_API_ERROR.getCode()));
     }
 
@@ -122,7 +119,7 @@ class ExchangeRateControllerTest {
                         .param("targetCurrency", TestConstants.EUR))
                 .andExpect(status().is5xxServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("There was an issue communicating with the external service. Please try again later."))
+                .andExpect(jsonPath("$.message").value("Validation failed: An error occurred while communicating with the external service: Unexpected error occurred while fetching exchange rate"))
                 .andExpect(jsonPath("$.errorCode").value(EXTERNAL_API_ERROR.getCode()));
     }
 }
