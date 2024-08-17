@@ -8,7 +8,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 /**
@@ -51,9 +53,9 @@ public class ExchangeRateController {
     @GetMapping("/exchange-rate")
     public ResponseEntity<BigDecimal> getExchangeRate(
             @Parameter(description = "Source currency code. USD is set as a default base currency", required = true, example = "EUR")
-            @RequestParam (defaultValue = "USD") String sourceCurrency,
+            @RequestParam (defaultValue = "USD") @NotBlank @Pattern(regexp = "^[A-Z]{3}$") String sourceCurrency,
             @Parameter(description = "Target currency code", required = true, example = "GBP")
-            @RequestParam @NotEmpty String targetCurrency) throws Exception {
+            @RequestParam @NotBlank @Pattern(regexp = "^[A-Z]{3}$") String targetCurrency) throws IOException {
 
         logger.info("Received request to get exchange rate from {} to {}", sourceCurrency, targetCurrency);
         var rate= exchangeRateService.getExchangeRate(sourceCurrency, targetCurrency);

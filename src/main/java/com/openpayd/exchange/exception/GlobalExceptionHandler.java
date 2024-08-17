@@ -5,10 +5,10 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * @author suleyman.yildirim
@@ -17,14 +17,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @ResponseBody
 @Slf4j
 public class GlobalExceptionHandler {
-    // Handles CurrencyNotFoundException and returns a 404 Not Found
-    @ExceptionHandler(CurrencyNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCurrencyNotFoundException(CurrencyNotFoundException ex) {
-        logException(ex);
-        String message = ex.getMessage(); // Already formatted in the exception
-        ErrorResponse errorResponse = new ErrorResponse(ex.getErrorCode().getCode(), message);
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
 
     // Handles validation errors and returns a 400 Bad Request
     @ExceptionHandler(ConstraintViolationException.class)
@@ -36,10 +28,10 @@ public class GlobalExceptionHandler {
     }
 
     // Handles type mismatch errors and returns a 400 Bad Request
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MissingServletRequestParameterException ex) {
         logException(ex);
-        String errorMessage = ErrorCode.VALIDATION_ERROR.formatMessage(ex.getName(), ex.getRequiredType().getName());
+        String errorMessage = ErrorCode.VALIDATION_ERROR.formatMessage(ex.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(ErrorCode.VALIDATION_ERROR.getCode(), errorMessage);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -47,8 +39,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<ErrorResponse> handleExternalApiException(ExternalApiException ex) {
         logException(ex);
-        String errorMessage = "There was an issue communicating with the external service. Please try again later.";
-        ErrorResponse errorResponse = new ErrorResponse("EXTERNAL_API_ERROR", errorMessage);
+        String errorMessage = ErrorCode.VALIDATION_ERROR.formatMessage(ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(ex.getErrorCode().getCode(), errorMessage);
         return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
@@ -56,8 +48,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         logException(ex);
-        String errorMessage = ErrorCode.VALIDATION_ERROR.formatMessage("An unexpected error occurred.");
-        ErrorResponse errorResponse = new ErrorResponse("INTERNAL_SERVER_ERROR", errorMessage);
+        String errorMessage = ErrorCode.INTERNAL_SERVER_ERROR.formatMessage(ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.name(), errorMessage);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

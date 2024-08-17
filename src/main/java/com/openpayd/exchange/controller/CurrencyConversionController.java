@@ -9,15 +9,20 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 /**
@@ -25,6 +30,7 @@ import java.math.BigDecimal;
  */
 @RestController
 @RequestMapping("/v1")
+@Validated
 public class CurrencyConversionController {
 
     private static final Logger logger = LoggerFactory.getLogger(CurrencyConversionController.class);
@@ -49,11 +55,11 @@ public class CurrencyConversionController {
     @PostMapping("/convert-currency")
     public ResponseEntity<CurrencyConversion> convertCurrency(
             @Parameter(description = "Source currency code", required = true, example = "EUR")
-            @RequestParam String sourceCurrency,
+            @RequestParam @NotBlank @Pattern(regexp = "^[A-Z]{3}$") String sourceCurrency,
             @Parameter(description = "Target currency code", required = true, example = "TRY")
-            @RequestParam String targetCurrency,
+            @RequestParam @NotBlank @Pattern(regexp = "^[A-Z]{3}$") String targetCurrency,
             @Parameter(description = "Amount to convert", required = true,  example = "15.5")
-            @RequestParam BigDecimal amount) {
+            @RequestParam @DecimalMin(value = "0.0", inclusive = false) BigDecimal amount) throws IOException {
 
         logger.info("Received request to convert {} {} to {}", amount, sourceCurrency, targetCurrency);
         var conversion = conversionService.convertCurrency(sourceCurrency, targetCurrency, amount);

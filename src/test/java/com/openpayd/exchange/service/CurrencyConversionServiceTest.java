@@ -1,6 +1,7 @@
 package com.openpayd.exchange.service;
 
-import com.openpayd.exchange.exception.CurrencyNotFoundException;
+import com.openpayd.exchange.exception.ErrorCode;
+import com.openpayd.exchange.exception.ExternalApiException;
 import com.openpayd.exchange.model.CurrencyConversion;
 import com.openpayd.exchange.repository.CurrencyConversionRepository;
 import constants.TestConstants;
@@ -73,10 +74,13 @@ class CurrencyConversionServiceTest {
     @Test
     void testGetExchangeRateInvalidCurrency() throws Exception {
         when(exchangeRateService.getExchangeRate(anyString(), anyString()))
-                .thenThrow(new CurrencyNotFoundException(TestConstants.USD));
+                .thenThrow(new ExternalApiException(TestConstants.INVALID_CURRENCY));
 
-        assertThrows(CurrencyNotFoundException.class, () -> {
+        var result = assertThrows(ExternalApiException.class, () -> {
             conversionService.convertCurrency(TestConstants.USD, TestConstants.INVALID_CURRENCY, BigDecimal.valueOf(100));
         });
+
+        assertEquals("An error occurred while communicating with the external service: An unexpected error occurred during currency conversion from USD to XXXXX", result.getMessage());
+        assertEquals(ErrorCode.EXTERNAL_API_ERROR.getCode(), result.getErrorCode().getCode());
     }
 }

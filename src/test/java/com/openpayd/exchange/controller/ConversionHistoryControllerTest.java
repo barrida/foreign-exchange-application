@@ -116,13 +116,13 @@ class ConversionHistoryControllerTest {
 
     @Test
     void testGetConversionHistoryByInvalidInput() throws Exception {
-        var asd = mockMvc.perform(get("/v1/conversion-history")
+        var result = mockMvc.perform(get("/v1/conversion-history")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        Assertions.assertEquals("At least one of transactionId or transactionDate must be provided", asd.getResponse().getContentAsString());
+        Assertions.assertEquals("At least one of transactionId or transactionDate must be provided", result.getResponse().getContentAsString());
     }
 
     @Test
