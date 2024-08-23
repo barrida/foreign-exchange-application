@@ -1,10 +1,7 @@
 package com.openpayd.exchange.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
@@ -21,6 +18,12 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "currency_conversion", indexes = {
+        @Index(name = "idx_created_at", columnList = "createdAt"),
+        @Index(name = "idx_source_currency", columnList = "sourceCurrency"),
+        @Index(name = "idx_target_currency", columnList = "targetCurrency"),
+        @Index(name = "idx_transaction_id_created_at", columnList = "id, createdAt")
+})
 public class CurrencyConversion {
 
     @Id
@@ -34,5 +37,15 @@ public class CurrencyConversion {
 
     @Schema(name = "The transaction date", example = "2024-07-29")
     private LocalDate createdAt;
+
+    @Schema(name = "Source currency code", example = "USD")
+    private String sourceCurrency;
+
+    @Schema(name = "Target currency code", example = "EUR")
+    private String targetCurrency;
+
+    @Schema(name = "Exchange rate used for conversion", example = "0.84")
+    private BigDecimal exchangeRate;
+
 }
 
